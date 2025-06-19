@@ -1,8 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Table, Input, Button, Tag, Space, Avatar } from 'antd';
+import { Table, Input, Button, Tag, Space, Avatar, Layout } from 'antd';
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import AppHeader from '@/components/header';
+import { SideHeader } from '@/components/sideheader';
+
+const { Header: AntHeader, Content } = Layout;
 
 interface Patient {
     key: string;
@@ -158,136 +162,152 @@ const PatientList = () => {
     ];
 
     return (
-        <div style={{ 
-            padding: '24px', 
-            backgroundColor: '#fafafa', 
-            minHeight: '100vh' 
-        }}>
-            <div style={{ 
-                backgroundColor: 'white', 
-                padding: '24px', 
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        <Layout style={{ minHeight: '100vh' , marginTop: '64px' }}>
+            <AntHeader style={{ 
+                display: 'flex', 
+                alignItems: 'center',
+                padding: 0,
+                background: '#fff',
+                boxShadow: '0 1px 4px rgba(0, 21, 41, 0.08)',
+                zIndex: 1,
+                height: 'auto',
+                lineHeight: 'normal'
             }}>
-                {/* Header */}
-                <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center',
-                    marginBottom: '24px'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <h2 style={{ 
-                            margin: 0, 
-                            fontSize: '20px', 
-                            fontWeight: 600,
-                            color: '#262626'
-                        }}>
-                            Patients
-                        </h2>
-                        <span style={{
-                            color: '#1890ff',
-                            fontSize: '14px',
-                            fontWeight: 500
-                        }}>
-                            1247 total
-                        </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <Input
-                            placeholder="Search by name, email or mobile number"
-                            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            style={{ 
-                                width: 300,
-                                borderRadius: '6px'
-                            }}
-                        />
-                        <Button 
-                            icon={<FilterOutlined />}
-                            style={{ 
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                            }}
-                        >
-                            Filter
-                        </Button>
-                    </div>
-                </div>
+                <AppHeader />
+                <SideHeader />
+            </AntHeader>
 
-                {/* Table */}
-                <Table
-                    columns={columns}
-                    dataSource={patients}
-                    pagination={{
-                        current: 1,
-                        pageSize: 5,
-                        total: 1247,
-                        showSizeChanger: false,
-                        showQuickJumper: false,
-                        showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} results`,
-                        style: { marginTop: '20px' },
-                        itemRender: (current, type, originalElement) => {
-                            if (type === 'page') {
-                                return (
-                                    <Button 
-                                        type={current === 1 ? 'primary' : 'default'}
-                                        size="small"
-                                        style={{ 
-                                            minWidth: '32px',
-                                            height: '32px',
-                                            margin: '0 2px'
-                                        }}
-                                    >
-                                        {current}
-                                    </Button>
-                                );
+            <Content style={{ 
+                padding: '24px', 
+                backgroundColor: '#fafafa', 
+                minHeight: 'calc(100vh - 64px)' 
+            }}>
+                <div style={{ 
+                    backgroundColor: 'white', 
+                    padding: '24px', 
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                    {/* Header */}
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        marginBottom: '24px'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h2 style={{ 
+                                margin: 0, 
+                                fontSize: '20px', 
+                                fontWeight: 600,
+                                color: '#262626'
+                            }}>
+                                Patients
+                            </h2>
+                            <span style={{
+                                color: '#1890ff',
+                                fontSize: '14px',
+                                fontWeight: 500
+                            }}>
+                                1247 total
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                            <Input
+                                placeholder="Search by name, email or mobile number"
+                                prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                style={{ 
+                                    width: 300,
+                                    borderRadius: '6px'
+                                }}
+                            />
+                            <Button 
+                                icon={<FilterOutlined />}
+                                style={{ 
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                }}
+                            >
+                                Filter
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Table */}
+                    <Table
+                        columns={columns}
+                        dataSource={patients}
+                        pagination={{
+                            current: 1,
+                            pageSize: 5,
+                            total: 1247,
+                            showSizeChanger: false,
+                            showQuickJumper: false,
+                            showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} results`,
+                            style: { marginTop: '20px' },
+                            itemRender: (current, type, originalElement) => {
+                                if (type === 'page') {
+                                    return (
+                                        <Button 
+                                            type={current === 1 ? 'primary' : 'default'}
+                                            size="small"
+                                            style={{ 
+                                                minWidth: '32px',
+                                                height: '32px',
+                                                margin: '0 2px'
+                                            }}
+                                        >
+                                            {current}
+                                        </Button>
+                                    );
+                                }
+                                if (type === 'prev') {
+                                    return (
+                                        <Button 
+                                            size="small" 
+                                            disabled
+                                            style={{ 
+                                                minWidth: '70px',
+                                                height: '32px',
+                                                margin: '0 2px'
+                                            }}
+                                        >
+                                            ← Previous
+                                        </Button>
+                                    );
+                                }
+                                if (type === 'next') {
+                                    return (
+                                        <Button 
+                                            size="small"
+                                            style={{ 
+                                                minWidth: '70px',
+                                                height: '32px',
+                                                margin: '0 2px'
+                                            }}
+                                        >
+                                            Next →
+                                        </Button>
+                                    );
+                                }
+                                if (type === 'jump-next') {
+                                    return <span style={{ margin: '0 8px' }}>...</span>;
+                                }
+                                return originalElement;
                             }
-                            if (type === 'prev') {
-                                return (
-                                    <Button 
-                                        size="small" 
-                                        disabled
-                                        style={{ 
-                                            minWidth: '70px',
-                                            height: '32px',
-                                            margin: '0 2px'
-                                        }}
-                                    >
-                                        ← Previous
-                                    </Button>
-                                );
-                            }
-                            if (type === 'next') {
-                                return (
-                                    <Button 
-                                        size="small"
-                                        style={{ 
-                                            minWidth: '70px',
-                                            height: '32px',
-                                            margin: '0 2px'
-                                        }}
-                                    >
-                                        Next →
-                                    </Button>
-                                );
-                            }
-                            if (type === 'jump-next') {
-                                return <span style={{ margin: '0 8px' }}>...</span>;
-                            }
-                            return originalElement;
-                        }
-                    }}
-                    style={{
-                        backgroundColor: 'white'
-                    }}
-                    scroll={{ x: 1200 }}
-                    size="middle"
-                />
-            </div>
-        </div>
+                        }}
+                        style={{
+                            backgroundColor: 'white'
+                        }}
+                        scroll={{ x: 1200 }}
+                        size="middle"
+                    />
+                </div>
+            </Content>
+        </Layout>
     );
 };
 

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AppHeader from '@/components/header';
 import { 
   Layout, 
   Menu, 
@@ -341,6 +342,8 @@ const ClinicsPage = () => {
   );
 
   return (
+    <>
+    <AppHeader />
     <Layout className="min-h-screen">
       <Sider 
         width={200} 
@@ -363,14 +366,7 @@ const ClinicsPage = () => {
             }}>
               <MedicineBoxOutlined style={{ color: 'white', fontSize: '18px' }} />
             </div>
-            <div>
-              <Title level={5} style={{ margin: 0, color: token.colorTextHeading }}>
-                MedAdmin
-              </Title>
-              <Text type="secondary" style={{ fontSize: '12px' }}>
-                Healthcare Management
-              </Text>
-            </div>
+          
           </Space>
         </div>
         
@@ -399,22 +395,16 @@ const ClinicsPage = () => {
             Clinics
           </Title>
           
-          <Space>
-            <Badge dot>
-              <Button 
-                type="text" 
-                icon={<BellOutlined />}
-                size="large"
-              />
-            </Badge>
-            
-            <Avatar 
-              size={32} 
-              style={{ backgroundColor: '#1890ff' }}
-            >
-              A
-            </Avatar>
-          </Space>
+            <Space style={{ flex: 1, justifyContent: 'flex-end' }}>
+            <Input
+              placeholder="Search clinics..."
+              prefix={<SearchOutlined />}
+              style={{ maxWidth: '300px' }}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+           
+            </Space>
         </Header>
 
         <Content style={{ padding: '24px', backgroundColor: '#f5f5f5' }}>
@@ -525,7 +515,8 @@ const ClinicsPage = () => {
           </Card>
         </Content>
       </Layout>
-    </Layout>
+    </Layout></>
+    
   );
 };
 

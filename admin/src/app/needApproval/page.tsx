@@ -4,11 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, DatePicker, Tag, Space, Select, Avatar, Modal, Spin, message, Layout } from 'antd';
 import { SearchOutlined, MoreOutlined, CalendarOutlined, EyeOutlined, DownloadOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import AppHeader from '@/components/header';
-import { Router } from 'react-router-dom';
+import { SideHeader } from '@/components/sideheader';
 const { RangePicker } = DatePicker;
 const { Option } = Select;
-import { useRouter } from 'next/navigation';
-import { SideHeader } from '@/components/sideheader';
 
 const { Header: AntHeader, Content } = Layout;
 
@@ -51,7 +49,7 @@ interface Doctor {
     role?: string;
 }
 
-const DoctorList = () => {
+const NeedApproval = () => {
     const [searchText, setSearchText] = useState('');
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [loading, setLoading] = useState(false);
@@ -65,8 +63,7 @@ const DoctorList = () => {
     const [selectedDoctorName, setSelectedDoctorName] = useState('');
     const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
-    const router = useRouter();
-
+    // Helper function to apply current filters
     const applyFilters = (doctorList: Doctor[]) => {
         let filtered = doctorList;
 
@@ -107,7 +104,7 @@ const DoctorList = () => {
                 return;
             }
 
-            const response = await fetch('http://216.10.251.239:3000/users/AllUsers?type=doctor&status=approved', {
+            const response = await fetch('http://216.10.251.239:3000/users/AllUsers?type=doctor', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -403,14 +400,61 @@ const DoctorList = () => {
                     {isVerified ? 'Verified' : 'Pending'}
                 </Tag>
             ),
-        }
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (text: string, record: Doctor) => (
+                <Space>
+                    {getImageSrc(record.profilepic) && (
+                        <Button 
+                            type="text" 
+                            icon={<EyeOutlined />} 
+                            onClick={() => showImageModal(getImageSrc(record.profilepic)!)}
+                            style={{ color: '#1890ff' }}
+                            title="View Profile Picture"
+                        />
+                    )}
+                    <Button 
+                        type="text" 
+                        icon={<CheckOutlined />}
+                        onClick={() => handleApprove(record._id)}
+                        loading={updatingStatus === record._id}
+                        disabled={updatingStatus === record._id || record.status?.toLowerCase() === 'active'}
+                        style={{ 
+                            color: record.status?.toLowerCase() === 'active' ? '#d9d9d9' : '#52c41a',
+                            backgroundColor: 'transparent'
+                        }}
+                        title="Approve Doctor"
+                    >
+                        Approve
+                    </Button>
+                    <Button 
+                        type="text" 
+                        icon={<CloseOutlined />}
+                        onClick={() => handleReject(record._id)}
+                        loading={updatingStatus === record._id}
+                        disabled={updatingStatus === record._id || record.status?.toLowerCase() === 'inactive'}
+                        style={{ 
+                            color: record.status?.toLowerCase() === 'inactive' ? '#d9d9d9' : '#ff4d4f',
+                            backgroundColor: 'transparent'
+                        }}
+                        title="Reject Doctor"
+                    >
+                        Reject
+                    </Button>
+                    <Button 
+                        type="text" 
+                        icon={<MoreOutlined />} 
+                        style={{ color: '#8c8c8c' }}
+                    />
+                </Space>
+            ),
+        },
     ];
 
     return (
-        <>
-    
-            <AppHeader />
-            <Layout style={{ minHeight: '100vh',marginTop: '64px' }}>
+        <Layout style={{ minHeight: '100vh',marginTop: '64px' }}>
             <AntHeader style={{ 
                 display: 'flex', 
                 alignItems: 'center',
@@ -421,6 +465,7 @@ const DoctorList = () => {
                 height: 'auto',
                 lineHeight: 'normal'
             }}>
+                <AppHeader />
                 <SideHeader />
             </AntHeader>
 
@@ -467,9 +512,6 @@ const DoctorList = () => {
                                 style={{ borderRadius: '6px' }}
                             >
                                 Refresh
-                            </Button>
-                            <Button onClick={() => router.push('/needApproval')}>
-                                Need For Approval of Doctors
                             </Button>
                         </Space>
                     </div>
@@ -653,9 +695,8 @@ const DoctorList = () => {
                     </div>
                 </Modal>
             </Content>
-        </Layout></>
-        
+        </Layout>
     );
 };
 
-export default DoctorList;
+export default NeedApproval;

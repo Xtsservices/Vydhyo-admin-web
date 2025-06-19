@@ -1,13 +1,33 @@
-'use client'
+"use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-  PhoneOutlined, 
-  MessageOutlined
-} from '@ant-design/icons';
-import { useRouter } from 'next/navigation';
+
+// Mock icons for this environment
+const PhoneOutlined = () => <span>📱</span>;
+const MessageOutlined = () => <span>💬</span>;
+
+// Define proper interfaces for API responses
+interface LoginResponse {
+  userId?: string;
+  message?: string;
+  success?: boolean;
+  expiresAt?: string;
+}
+
+interface OTPValidationResponse {
+  accessToken?: string;
+  user?: {
+    id: string;
+    name: string;
+    mobile: string;
+  };
+  message?: string;
+  success?: boolean;
+}
 
 const MobileLoginPage = () => {
+  const API_BASE_URL = "http://216.10.251.239:3000";
+
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
@@ -15,7 +35,8 @@ const MobileLoginPage = () => {
   const [error, setError] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const router = useRouter();
+  const [userId, setUserId] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     const checkMobile = () => {
@@ -44,54 +65,197 @@ const MobileLoginPage = () => {
     return /^[0-9]{10}$/.test(phoneNumber);
   };
 
-  const handleSendOTP = async () => {
-    if (!phone || !validatePhone(phone)) {
-      setError('Please enter a valid 10-digit phone number');
-      return;
+  const makeAPIRequest = async (endpoint: string, data: any) => {
+    try {
+      const requestOptions: RequestInit = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(data),
+      };
+
+      console.log('Making API request to:', `${API_BASE_URL}${endpoint}`);
+      console.log('Request payload:', JSON.stringify(data, null, 2));
+
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, requestOptions);
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      // Get response text first to handle both JSON and non-JSON responses
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        responseData = { message: responseText, success: false };
+      }
+
+      if (!response.ok) {
+        // Handle 401 specifically for OTP validation
+        if (response.status === 401 && endpoint === '/auth/validateOtp') {
+          return {
+            ...responseData,
+            success: false,
+            message: responseData.message || 'Invalid OTP. Please try again.'
+          };
+        }
+        throw new Error(responseData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return responseData;
+    } catch (error) {
+      console.error('API Request Error:', error);
+      throw error;
     }
-    
-    setIsLoading(true);
-    setError('');
-    setTimeout(() => {
-      setOtpSent(true);
-      setOtpTimer(30);
-      setIsLoading(false);
-    }, 1500);
   };
 
-  const handleOTPVerification = () => {
-    if (!otp || otp.length < 6) {
+  const handleSendOTP = async () => {
+    if (!validatePhone(phone)) {
+      setError('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const requestData = {
+        mobile: phone,
+        userType: "doctor",
+        language: "tel"
+      };
+
+      const data = await makeAPIRequest('/auth/login', requestData);
+
+      console.log('OTP sent successfully:', data);
+
+      // Handle different response formats
+      if (data.userId || data.success !== false) {
+        setUserId(data.userId || `temp-${Date.now()}`);
+        setOtpSent(true);
+        setOtpTimer(60);
+        setSuccessMessage(data.message || 'OTP sent successfully!');
+        setError('');
+
+        // Don't auto-fill OTP in production
+        if (process.env.NODE_ENV === 'development') {
+          setOtp('');
+          setSuccessMessage(data.message || 'OTP sent successfully! (Development mode - auto-filled)');
+        }
+      } else {
+        setError(data.message || 'Failed to send OTP. Please try again.');
+      }
+
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+
+      if (error instanceof Error) {
+        // Handle specific error cases
+        if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+          setError('Network Error: Unable to connect to server. Please check your connection.');
+        } else if (error.message.includes('401')) {
+          setError('Authentication failed. Please contact support.');
+        } else if (error.message.includes('400')) {
+          setError('Invalid request. Please check your mobile number format.');
+        } else if (error.message.includes('500')) {
+          setError('Server error. Please try again later.');
+        } else {
+          setError(error.message || 'Failed to send OTP. Please try again.');
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOTPVerification = async () => {
+    if (!otp || otp.length !== 6) {
       setError('Please enter the complete 6-digit OTP');
       return;
     }
-    
+
+    if (!userId) {
+      setError('Session expired. Please request OTP again.');
+      resetPhoneLogin();
+      return;
+    }
+
     setIsLoading(true);
-    setTimeout(() => {
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const requestData = {
+        userId: userId,
+        OTP: otp,
+        mobile: phone
+      };
+
+      const data: OTPValidationResponse = await makeAPIRequest('/auth/validateOtp', requestData);
+
+      console.log('OTP Validation Response:', data);
+
+      if (data.accessToken) {
+        console.log('Login token received:', data.accessToken);
+        // Save token securely in local storage
+        localStorage.setItem('accessToken', data.accessToken);
+        window.location.href = '/dashboard';
+      }
+
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+
+      if (error instanceof Error) {
+        if (error.message.includes('401')) {
+          setError('Invalid OTP. Please try again.');
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+          setError('Network Error: Unable to connect to server.');
+        } else {
+          setError(error.message || 'Verification failed. Please try again.');
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
       setIsLoading(false);
-      router.push('/dashboard');
-    }, 1000);
+    }
   };
+
 
   const resetPhoneLogin = () => {
     setOtpSent(false);
     setOtpTimer(0);
     setError('');
+    setSuccessMessage('');
     setPhone('');
     setOtp('');
+    setUserId('');
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 10);
     setPhone(value);
     if (error) setError('');
+    if (successMessage) setSuccessMessage('');
   };
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
     setOtp(value);
     if (error) setError('');
+    if (successMessage) setSuccessMessage('');
   };
 
+  // Styles remain the same as original
   const containerStyle: React.CSSProperties = {
     minHeight: '100vh',
     display: 'flex',
@@ -157,7 +321,8 @@ const MobileLoginPage = () => {
     borderRadius: '10px',
     outline: 'none',
     transition: 'border-color 0.3s ease',
-    marginBottom: '1rem'
+    marginBottom: '1rem',
+    boxSizing: 'border-box'
   };
 
   const inputContainerStyle: React.CSSProperties = {
@@ -195,6 +360,19 @@ const MobileLoginPage = () => {
     border: '1px solid #ffccc7',
     borderRadius: '8px',
     color: '#ff4d4f',
+    fontSize: '14px',
+    marginBottom: '1.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  };
+
+  const successStyle: React.CSSProperties = {
+    padding: '12px 16px',
+    backgroundColor: '#f6ffed',
+    border: '1px solid #b7eb8f',
+    borderRadius: '8px',
+    color: '#52c41a',
     fontSize: '14px',
     marginBottom: '1.5rem',
     display: 'flex',
@@ -265,10 +443,19 @@ const MobileLoginPage = () => {
             </div>
           )}
 
+          {successMessage && (
+            <div style={successStyle}>
+              <span>✅</span>
+              {successMessage}
+            </div>
+          )}
+
           {!otpSent ? (
             <>
               <div style={inputContainerStyle}>
-                <PhoneOutlined style={iconStyle} />
+                <div style={iconStyle}>
+                  <PhoneOutlined />
+                </div>
                 <input
                   type="text"
                   placeholder="Enter your 10-digit mobile number"
@@ -286,8 +473,8 @@ const MobileLoginPage = () => {
               <button
                 style={{
                   ...buttonStyle,
-                  opacity: !phone || phone.length !== 10 ? 0.6 : 1,
-                  cursor: !phone || phone.length !== 10 ? 'not-allowed' : 'pointer'
+                  opacity: !phone || phone.length !== 10 || isLoading ? 0.6 : 1,
+                  cursor: !phone || phone.length !== 10 || isLoading ? 'not-allowed' : 'pointer'
                 }}
                 onClick={handleSendOTP}
                 disabled={!phone || phone.length !== 10 || isLoading}
@@ -304,6 +491,11 @@ const MobileLoginPage = () => {
                 <p style={{ fontSize: '16px', marginBottom: '0.5rem' }}>
                   OTP sent to <strong>+91 {phone}</strong>
                 </p>
+                {process.env.NODE_ENV === 'development' && (
+                  <p style={{ fontSize: '14px', color: '#52c41a', marginBottom: '0.5rem' }}>
+                    Development mode - OTP auto-filled
+                  </p>
+                )}
                 <button
                   onClick={resetPhoneLogin}
                   style={{
@@ -349,23 +541,29 @@ const MobileLoginPage = () => {
                 {otpTimer === 0 && (
                   <button
                     onClick={handleSendOTP}
+                    disabled={isLoading}
                     style={{
                       background: 'none',
                       border: 'none',
                       color: '#667eea',
-                      cursor: 'pointer',
-                      textDecoration: 'underline'
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      textDecoration: 'underline',
+                      opacity: isLoading ? 0.6 : 1
                     }}
                   >
-                    Resend OTP
+                    {isLoading ? 'Sending...' : 'Resend OTP'}
                   </button>
                 )}
               </div>
 
               <button
-                style={buttonStyle}
+                style={{
+                  ...buttonStyle,
+                  opacity: !otp || otp.length !== 6 || isLoading ? 0.6 : 1,
+                  cursor: !otp || otp.length !== 6 || isLoading ? 'not-allowed' : 'pointer'
+                }}
                 onClick={handleOTPVerification}
-                disabled={isLoading}
+                disabled={!otp || otp.length !== 6 || isLoading}
               >
                 {isLoading ? 'Verifying...' : 'Verify & Sign In'}
               </button>
