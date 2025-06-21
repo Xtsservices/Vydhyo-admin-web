@@ -128,7 +128,7 @@ const MobileLoginPage = () => {
     try {
       const requestData = {
         mobile: phone,
-        userType: "doctor",
+        userType: "admin",
         language: "tel"
       };
 
@@ -411,7 +411,8 @@ const MobileLoginPage = () => {
       <div style={wrapperStyle}>
         <div style={leftStyle}>
           <img
-            src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+            // src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+            src="/images/doctors.png"
             alt="Doctor Illustration"
             style={imageStyle}
           />

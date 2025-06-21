@@ -46,8 +46,10 @@ import {
   QuestionCircleOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  HomeOutlined
+  HomeOutlined,
+  StarFilled
 } from '@ant-design/icons';
+import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AppHeader from '@/components/header';
 
 const { Header, Content, Sider } = Layout;
@@ -70,6 +72,18 @@ const MedicalDashboard = () => {
       onClick: () => router.push('/dashboard')
     },
     {
+      key: 'appointments',
+      icon: <ScheduleOutlined />,
+      label: 'Appointments',
+      onClick: () => router.push('/appointments')
+    },
+    {
+      key: 'specialities',
+      icon: <MedicineBoxOutlined />,
+      label: 'Specialities',
+      onClick: () => router.push('/specialities')
+    },
+    {
       key: 'doctors',
       icon: <TeamOutlined />,
       label: 'Doctors',
@@ -82,126 +96,223 @@ const MedicalDashboard = () => {
       onClick: () => router.push('/patients')
     },
     {
-      key: 'clinics',
-      icon: <HomeOutlined />,
-      label: 'Clinics',
-      onClick: () => router.push('/clinics')
+      key: 'reviews',
+      icon: <StarFilled />,
+      label: 'Reviews',
+      onClick: () => router.push('/reviews')
     },
     {
-          key: 'doctors',
-          icon: <TeamOutlined />,
-          label: 'Doctors',
-          onClick: () => router.push('/doctors')
-        },
-    {
-      key: 'appointments',
-      icon: <ScheduleOutlined />,
-      label: 'Appointments',
-      onClick: () => router.push('/appointments')
-    },
-    {
-      key: 'billing',
+      key: 'transactions',
       icon: <MoneyCollectOutlined />,
-      label: 'Billing',
-      onClick: () => router.push('/billing')
-    },
-    {
-      key: 'reports',
-      icon: <FileTextOutlined />,
-      label: 'Reports',
-      onClick: () => router.push('/reports')
+      label: 'Transactions',
+      onClick: () => router.push('/transactions')
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Settings',
       onClick: () => router.push('/settings')
+    },
+    {
+      key: 'reports',
+      icon: <FileTextOutlined />,
+      label: 'Reports',
+      onClick: () => router.push('/reports')
     }
   ];
 
   const statsData = [
     {
-      title: 'Total Clinics',
-      value: 128,
-      change: '+12%',
-      icon: <HomeOutlined />,
+      title: 'Doctors',
+      value: 168,
       color: '#1890ff',
-      trend: 'up',
-      route: '/clinics'
     },
     {
-      title: 'Total Doctors',
-      value: doctorsCount,
-      change: '+8%',
-      icon: <TeamOutlined />,
+      title: 'Patients',
+      value: 487,
       color: '#52c41a',
-      trend: 'up',
-      route: '/doctors'
     },
     {
-      title: 'Total Patients',
-      value: 2847,
-      change: '+24%',
-      icon: <UserOutlined />,
-      color: '#722ed1',
-      trend: 'up',
-      route: '/patients'
+      title: 'Appointment',
+      value: 485,
+      color: '#ff4d4f',
     },
     {
-      title: 'Total Appointments',
-      value: 1923,
-      change: '-3%',
-      icon: <CalendarOutlined />,
-      color: '#fa8c16',
-      trend: 'down',
-      route: '/appointments'
+      title: 'Revenue',
+      value: '$62523',
+      color: '#faad14',
     }
   ];
 
-  const upcomingAppointments: Appointment[] = [
+  // Revenue chart data
+  const revenueData = [
+    { year: '2013', revenue: 50 },
+    { year: '2014', revenue: 75 },
+    { year: '2015', revenue: 225 },
+    { year: '2016', revenue: 120 },
+    { year: '2017', revenue: 75 },
+    { year: '2018', revenue: 200 }
+  ];
+
+  // Status chart data
+  const statusData = [
+    { year: '2015', orange: 25, blue: 100 },
+    { year: '2016', orange: 50, blue: 25 },
+    { year: '2017', orange: 125, blue: 90 },
+    { year: '2018', orange: 75, blue: 50 },
+    { year: '2019', orange: 150, blue: 125 }
+  ];
+
+  // Doctors list data
+  const doctorsList = [
     {
       key: '1',
-      patient: 'Sarah Johnson',
-      doctor: 'Dr. Smith',
-      time: 'Today, 2:30 PM',
-      clinic: 'Main Clinic',
-      status: 'Confirmed',
-      avatar: 'SJ'
+      name: 'Dr. Ruby Perrin',
+      specialty: 'Dental',
+      earned: '$3200.00',
+      reviews: 4.5,
+      avatar: 'https://via.placeholder.com/40'
     },
     {
       key: '2',
-      patient: 'Mike Chen',
-      doctor: 'Dr. Wilson',
-      time: 'Tomorrow, 10:00 AM',
-      clinic: 'North Branch',
-      status: 'Pending',
-      avatar: 'MC'
+      name: 'Dr. Darren Elder',
+      specialty: 'Dental',
+      earned: '$3100.00',
+      reviews: 4.2,
+      avatar: 'https://via.placeholder.com/40'
     },
     {
       key: '3',
-      patient: 'Emma Davis',
-      doctor: 'Dr. Brown',
-      time: 'Dec 18, 3:15 PM',
-      clinic: 'East Clinic',
-      status: 'Cancelled',
-      avatar: 'ED'
+      name: 'Dr. Deborah Angel',
+      specialty: 'Cardiology',
+      earned: '$4000.00',
+      reviews: 4.8,
+      avatar: 'https://via.placeholder.com/40'
+    },
+    {
+      key: '4',
+      name: 'Dr. Sofia Brient',
+      specialty: 'Urology',
+      earned: '$3200.00',
+      reviews: 4.3,
+      avatar: 'https://via.placeholder.com/40'
     }
   ];
 
-  const revenueData = [
-    { title: 'Consultation', amount: 24567 },
-    { title: 'Pharmacy', amount: 8943 }
+  // Patients list data
+  const patientsList = [
+    {
+      key: '1',
+      name: 'Charlene Reed',
+      phone: '8286329170',
+      lastVisit: '20 Oct 2023',
+      paid: '$100.00',
+      avatar: 'https://via.placeholder.com/40'
+    },
+    {
+      key: '2',
+      name: 'Travis Trimble',
+      phone: '2077299974',
+      lastVisit: '22 Oct 2023',
+      paid: '$200.00',
+      avatar: 'https://via.placeholder.com/40'
+    },
+    {
+      key: '3',
+      name: 'Carl Kelly',
+      phone: '2607247769',
+      lastVisit: '21 Oct 2023',
+      paid: '$250.00',
+      avatar: 'https://via.placeholder.com/40'
+    },
+    {
+      key: '4',
+      name: 'Michelle Fairfax',
+      phone: '5043686874',
+      lastVisit: '21 Sep 2023',
+      paid: '$150.00',
+      avatar: 'https://via.placeholder.com/40'
+    }
   ];
 
-  // Fixed function to get auth token properly
-  const getAuthToken = () => {
-    // Replace this with your actual token retrieval logic
-    // This could be from localStorage, cookies, or a context
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  const doctorColumns = [
+    {
+      title: 'Doctor Name',
+      dataIndex: 'name',
+      key: 'name',
+      width: 150,
+      render: (text: string, record: any) => (
+        <Space>
+          <Avatar src={record.avatar} size="small" />
+          <Text strong style={{ fontSize: '12px' }}>{text}</Text>
+        </Space>
+      )
+    },
+    {
+      title: 'Specialty',
+      dataIndex: 'specialty',
+      key: 'specialty',
+      width: 100,
+      render: (text: string) => <Text style={{ fontSize: '12px' }}>{text}</Text>
+    },
+    {
+      title: 'Earned',
+      dataIndex: 'earned',
+      key: 'earned',
+      width: 80,
+      render: (text: string) => <Text strong style={{ fontSize: '12px' }}>{text}</Text>
+    },
+    {
+      title: 'Reviews',
+      dataIndex: 'reviews',
+      key: 'reviews',
+      width: 100,
+      render: (rating: number) => (
+        <Space size="small">
+          <StarFilled style={{ color: '#faad14', fontSize: '12px' }} />
+          <StarFilled style={{ color: '#faad14', fontSize: '12px' }} />
+          <StarFilled style={{ color: '#faad14', fontSize: '12px' }} />
+          <Text style={{ fontSize: '11px' }}>{rating}</Text>
+        </Space>
+      )
     }
-    return null;
-  };
+  ];
+
+  const patientColumns = [
+    {
+      title: 'Patient Name',
+      dataIndex: 'name',
+      key: 'name',
+      width: 150,
+      render: (text: string, record: any) => (
+        <Space>
+          <Avatar src={record.avatar} size="small" />
+          <Text strong style={{ fontSize: '12px' }}>{text}</Text>
+        </Space>
+      )
+    },
+    {
+      title: 'Phone',
+      dataIndex: 'phone',
+      key: 'phone',
+      width: 120,
+      render: (text: string) => <Text style={{ fontSize: '12px' }}>{text}</Text>
+    },
+    {
+      title: 'Last Visit',
+      dataIndex: 'lastVisit',
+      key: 'lastVisit',
+      width: 100,
+      render: (text: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined) => <Text style={{ fontSize: '12px' }}>{text}</Text>
+    },
+    {
+      title: 'Paid',
+      dataIndex: 'paid',
+      key: 'paid',
+      width: 80,
+      render: (text: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined) => <Text strong style={{ fontSize: '12px' }}>{text}</Text>
+    }
+  ];
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -240,102 +351,128 @@ const MedicalDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const quickLinks = [
-    { title: 'Manage Users', icon: <UsergroupAddOutlined />, color: '#722ed1' },
-    { title: 'View Reports', icon: <BarChartOutlined />, color: '#52c41a' },
-    { title: 'Settings', icon: <SettingOutlined />, color: '#1890ff' },
-    { title: 'Support', icon: <QuestionCircleOutlined />, color: '#fa8c16' }
-  ];
-
-  const recentNotifications = [
+  // Appointment List Columns
+  const appointmentColumns = [
     {
-      id: 1,
-      type: 'info',
-      title: 'System maintenance scheduled',
-      time: '2 hours ago',
-      color: '#1890ff'
+      title: 'Appointment ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 120,
+      render: (text: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined) => <Text style={{ fontSize: '12px' }}>{text}</Text>
     },
     {
-      id: 2,
-      type: 'warning',
-      title: 'New patient inquiry received',
-      time: '4 hours ago',
-      color: '#faad14'
-    },
-    {
-      id: 3,
-      type: 'success',
-      title: 'Payment processed successfully',
-      time: '6 hours ago',
-      color: '#52c41a'
-    }
-  ];
-
-  interface Appointment {
-    key: string;
-    patient: string;
-    doctor: string;
-    time: string;
-    clinic: string;
-    status: 'Confirmed' | 'Pending' | 'Cancelled';
-    avatar: string;
-  }
-
-  interface AppointmentColumn {
-    title: string;
-    dataIndex: keyof Appointment;
-    key: keyof Appointment;
-    render?: (text: string, record: Appointment) => JSX.Element | string;
-  }
-
-  const appointmentColumns: AppointmentColumn[] = [
-    {
-      title: 'Patient',
-      dataIndex: 'patient',
-      key: 'patient',
-      render: (text, record) => (
+      title: 'Patient Name',
+      dataIndex: 'patientName',
+      key: 'patientName',
+      width: 150,
+      render: (text: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined, record: { patientAvatar: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }) => (
         <Space>
-          <Avatar size="small" style={{ backgroundColor: '#1890ff' }}>
-            {record.avatar}
-          </Avatar>
-          <Text strong>{text}</Text>
+          <Avatar src={record.patientAvatar} size="small" />
+          <Text strong style={{ fontSize: '12px' }}>{text}</Text>
         </Space>
       )
     },
     {
-      title: 'Doctor',
-      dataIndex: 'doctor',
-      key: 'doctor',
+      title: 'Doctor Name',
+      dataIndex: 'doctorName',
+      key: 'doctorName',
+      width: 150,
+      render: (text: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined, record: { doctorAvatar: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; }) => (
+        <Space>
+          <Avatar src={record.doctorAvatar} size="small" />
+          <Text strong style={{ fontSize: '12px' }}>{text}</Text>
+        </Space>
+      )
     },
     {
-      title: 'Time & Date',
+      title: 'Date',
+      dataIndex: 'date',
+      key: 'date',
+      width: 120,
+      render: (text: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined) => <Text style={{ fontSize: '12px' }}>{text}</Text>
+    },
+    {
+      title: 'Time',
       dataIndex: 'time',
       key: 'time',
-    },
-    {
-      title: 'Clinic',
-      dataIndex: 'clinic',
-      key: 'clinic',
+      width: 100,
+      render: (text: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined) => <Text style={{ fontSize: '12px' }}>{text}</Text>
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (text: string) => {
-        const status = text as 'Confirmed' | 'Pending' | 'Cancelled';
-        const colors: Record<'Confirmed' | 'Pending' | 'Cancelled', string> = {
-          'Confirmed': '#52c41a',
-          'Pending': '#faad14',
-          'Cancelled': '#ff4d4f'
-        };
-        return <Tag color={colors[status]}>{status}</Tag>;
-      }
+      width: 100,
+      render: (status: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined) => (
+        <Tag color={status === 'Completed' ? 'green' : status === 'Pending' ? 'orange' : 'red'}>
+          {status}
+        </Tag>
+      )
     }
   ];
+
+  // Appointment List Data
+  const appointmentsList = [
+    {
+      key: '1',
+      id: 'APT001',
+      patientName: 'Charlene Reed',
+      patientAvatar: 'https://via.placeholder.com/40',
+      doctorName: 'Dr. Ruby Perrin',
+      doctorAvatar: 'https://via.placeholder.com/40',
+      date: '20 Oct 2023',
+      time: '10:00 AM',
+      status: 'Completed'
+    },
+    {
+      key: '2',
+      id: 'APT002',
+      patientName: 'Travis Trimble',
+      patientAvatar: 'https://via.placeholder.com/40',
+      doctorName: 'Dr. Darren Elder',
+      doctorAvatar: 'https://via.placeholder.com/40',
+      date: '22 Oct 2023',
+      time: '11:00 AM',
+      status: 'Pending'
+    },
+    {
+      key: '3',
+      id: 'APT003',
+      patientName: 'Carl Kelly',
+      patientAvatar: 'https://via.placeholder.com/40',
+      doctorName: 'Dr. Deborah Angel',
+      doctorAvatar: 'https://via.placeholder.com/40',
+      date: '21 Oct 2023',
+      time: '09:30 AM',
+      status: 'Cancelled'
+    },
+    {
+      key: '4',
+      id: 'APT004',
+      patientName: 'Michelle Fairfax',
+      patientAvatar: 'https://via.placeholder.com/40',
+      doctorName: 'Dr. Sofia Brient',
+      doctorAvatar: 'https://via.placeholder.com/40',
+      date: '21 Sep 2023',
+      time: '01:00 PM',
+      status: 'Completed'
+    },
+    {
+      key: '5',
+      id: 'APT005',
+      patientName: 'Paul Richard',
+      patientAvatar: 'https://via.placeholder.com/40',
+      doctorName: 'Dr. Ruby Perrin',
+      doctorAvatar: 'https://via.placeholder.com/40',
+      date: '23 Oct 2023',
+      time: '03:00 PM',
+      status: 'Pending'
+    }
+  ];
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return (
     <>
@@ -343,230 +480,307 @@ const MedicalDashboard = () => {
       <Layout className="min-h-screen">
         <Sider 
           width={200} 
-          theme="light"
+          theme="dark"
+          breakpoint="lg"
+          collapsedWidth="0"
           style={{
-            boxShadow: '2px 0 8px 0 rgba(29, 35, 41, 0.05)',
-            borderRight: '1px solid #f0f0f0'
+            background: '#2c5aa0'
           }}
         >
+          <div style={{ 
+            padding: '16px', 
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            textAlign: 'center',
+            color: 'white',
+            marginTop:'84px'
+          }}>
+            <Text strong style={{ color: 'white' }}>Main</Text>
+          </div>
           <Menu
-            theme="light"
+            theme="dark"
             mode="inline"
             defaultSelectedKeys={['dashboard']}
             items={menuItems}
-            style={{ border: 'none' }}
+            style={{ 
+              border: 'none',
+              background: 'transparent'
+            }}
+          />
+          
+          <div style={{ 
+            padding: '16px', 
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            marginTop: 'auto',
+            color: 'white'
+          }}>
+            <Text strong style={{ color: 'white' }}>Pages</Text>
+          </div>
+          <Menu
+            theme="dark"
+            mode="inline"
+            items={[
+              {
+                key: 'profile',
+                icon: <UserOutlined />,
+                label: 'Profile',
+              },
+              {
+                key: 'authentication',
+                icon: <SettingOutlined />,
+                label: 'Authentication',
+              },
+              {
+                key: 'error-pages',
+                icon: <QuestionCircleOutlined />,
+                label: 'Error Pages',
+              }
+            ]}
+            style={{ 
+              border: 'none',
+              background: 'transparent'
+            }}
           />
         </Sider>
 
         <Layout>
           <Header 
             style={{ 
-              backgroundColor: token.colorBgContainer,
-              borderBottom: `1px solid ${token.colorBorderSecondary}`,
-              padding: '0 24px',
-              height: '64px',
+              backgroundColor: 'white',
+              borderBottom: '1px solid #f0f0f0',
+              padding: '0 16px',
+              height: '71px',
+              marginTop: '90px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
+              flexWrap: 'wrap'
             }}
           >
-            <Title level={3} style={{ margin: 0, color: token.colorTextHeading }}>
-              Dashboard
-            </Title>
+            <div style={{ flex: 1, minWidth: '200px' }}>
+              <Title level={2} style={{ margin: 0, fontSize: '20px' }}>
+                Welcome Admin!
+              </Title>
+              <Text type="secondary" style={{ fontSize: '14px' }}>Dashboard</Text>
+            </div>
             
-            <Space size="large">
+            <Space size="middle" style={{ flexWrap: 'wrap' }}>
               <Input
-                placeholder="Search doctors, patients..."
+                placeholder="Search here"
                 prefix={<SearchOutlined />}
-                style={{ width: '300px' }}
+                style={{ width: '200px', minWidth: '150px' }}
               />
+              {/* <Badge count={3} size="small"> */}
+                {/* <BellOutlined style={{ fontSize: '18px' }} /> */}
+              {/* </Badge> */}
+              {/* <Avatar size="large" src="https://via.placeholder.com/40" /> */}
             </Space>
           </Header>
 
-          <Content style={{ padding: '24px', backgroundColor: '#f5f5f5' }}>
+          <Content style={{ padding: '16px',marginTop: '8px', backgroundColor: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
             {/* Stats Cards */}
             <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
               {statsData.map((stat, index) => (
-                <Col xs={24} sm={12} lg={6} key={index}>
+                <Col xs={24} sm={12} md={12} lg={6} xl={6} key={index}>
                   <Card 
-                    hoverable
-                    onClick={() => router.push(stat.route)}
                     style={{ 
                       borderRadius: '8px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                      cursor: 'pointer'
+                      textAlign: 'center',
+                      minHeight: '140px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <Text type="secondary" style={{ fontSize: '14px' }}>
-                          {stat.title}
-                        </Text>
-                        <div style={{ marginTop: '8px' }}>
-                          <Title level={2} style={{ margin: 0, color: token.colorTextHeading }}>
-                            {stat.value ? stat.value.toLocaleString() : '0'}
-                          </Title>
-                          <Space style={{ marginTop: '4px' }}>
-                            {stat.trend === 'up' ? 
-                              <ArrowUpOutlined style={{ color: '#52c41a', fontSize: '12px' }} /> :
-                              <ArrowDownOutlined style={{ color: '#ff4d4f', fontSize: '12px' }} />
-                            }
-                            <Text style={{ 
-                              color: stat.trend === 'up' ? '#52c41a' : '#ff4d4f',
-                              fontSize: '12px'
-                            }}>
-                              {stat.change}
-                            </Text>
-                          </Space>
-                        </div>
-                      </div>
-                      <Avatar 
-                        size={48} 
-                        style={{ 
-                          backgroundColor: `${stat.color}20`,
-                          border: `1px solid ${stat.color}30`
-                        }}
-                        icon={React.cloneElement(stat.icon, { 
-                          style: { color: stat.color, fontSize: '24px' }
-                        })}
-                      />
+                    <div style={{
+                      width: '50px',
+                      height: '50px',
+                      borderRadius: '50%',
+                      backgroundColor: stat.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto 12px',
+                      position: 'relative'
+                    }}>
+                      {index === 0 && <TeamOutlined style={{ color: 'white', fontSize: '20px' }} />}
+                      {index === 1 && <div style={{ color: 'white', fontSize: '20px' }}>📋</div>}
+                      {index === 2 && <CalendarOutlined style={{ color: 'white', fontSize: '20px' }} />}
+                      {index === 3 && <div style={{ color: 'white', fontSize: '20px' }}>📁</div>}
+                    </div>
+                    <Title level={3} style={{ margin: '0 0 4px 0', color: '#333', fontSize: '24px' }}>
+                      {stat.value}
+                    </Title>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      {stat.title}
+                    </Text>
+                    <div style={{
+                      width: '100%',
+                      height: '3px',
+                      backgroundColor: '#f0f0f0',
+                      borderRadius: '2px',
+                      marginTop: '8px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: '70%',
+                        height: '100%',
+                        backgroundColor: stat.color,
+                        borderRadius: '2px'
+                      }} />
                     </div>
                   </Card>
                 </Col>
               ))}
             </Row>
 
-            <Row gutter={[16, 16]}>
-              {/* Upcoming Appointments */}
-              <Col xs={24} lg={14}>
+            <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+              {/* Revenue Chart */}
+              <Col xs={24} sm={24} md={24} lg={12} xl={12}>
                 <Card 
-                  title={
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text strong>Upcoming Appointments</Text>
-                      <Button type="link" size="small" onClick={() => router.push('/appointments')}>View All</Button>
-                    </div>
-                  }
-                  style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                  extra={
-                    <DatePicker 
-                      placeholder="mm/dd/yyyy"
-                      style={{ width: '140px' }}
-                      onChange={setSelectedDate}
-                    />
-                  }
+                  title="Revenue"
+                  style={{ borderRadius: '8px', height: 'auto', minHeight: '350px' }}
                 >
-                  <Table 
-                    columns={appointmentColumns}
-                    dataSource={upcomingAppointments}
-                    pagination={false}
-                    size="small"
-                    loading={loading}
-                  />
+                  <div style={{ width: '100%', height: '280px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#1890ff" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#1890ff" stopOpacity={0.3}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="year" />
+                        <YAxis />
+                        <Tooltip />
+                        <Area 
+                          type="monotone" 
+                          dataKey="revenue" 
+                          stroke="#1890ff" 
+                          fillOpacity={1} 
+                          fill="url(#colorRevenue)" 
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
                 </Card>
               </Col>
 
-              {/* Right Side Panel */}
-              <Col xs={24} lg={10}>
-                <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                  {/* Revenue Summary */}
-                  <Card 
-                    title="Revenue Summary"
-                    style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                  >
-                    <Row gutter={16}>
-                      {revenueData.map((item, index) => (
-                        <Col span={12} key={index}>
-                          <div style={{ textAlign: 'center' }}>
-                            <Title level={3} style={{ margin: 0, color: token.colorTextHeading }}>
-                              ₹{item.amount.toLocaleString()}
-                            </Title>
-                            <Text type="secondary">{item.title}</Text>
-                          </div>
-                        </Col>
-                      ))}
-                    </Row>
-                  </Card>
+              {/* Status Chart */}
+              <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+                <Card 
+                  title="Status"
+                  style={{ borderRadius: '8px', height: 'auto', minHeight: '350px' }}
+                >
+                  <div style={{ width: '100%', height: '280px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={statusData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="year" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line 
+                          type="monotone" 
+                          dataKey="orange" 
+                          stroke="#faad14" 
+                          strokeWidth={3}
+                          dot={{ fill: '#faad14', strokeWidth: 2, r: 4 }}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="blue" 
+                          stroke="#1890ff" 
+                          strokeWidth={3}
+                          dot={{ fill: '#1890ff', strokeWidth: 2, r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </Card>
+              </Col>
+            </Row>
 
-                  {/* Quick Links */}
-                  <Card 
-                    title="Quick Links"
-                    style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                  >
-                    <Row gutter={[8, 8]}>
-                      {quickLinks.map((link, index) => (
-                        <Col span={12} key={index}>
-                          <Card 
-                            size="small"
-                            hoverable
-                            onClick={() => {
-                              if (link.title === 'Manage Users') router.push('/doctors');
-                              if (link.title === 'View Reports') router.push('/reports');
-                              if (link.title === 'Settings') router.push('/settings');
-                              if (link.title === 'Support') router.push('/support');
-                            }}
-                            style={{ 
-                              textAlign: 'center',
-                              borderRadius: '6px',
-                              border: `1px solid ${link.color}30`,
-                              backgroundColor: `${link.color}05`,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <div style={{ padding: '8px 4px' }}>
-                              {React.cloneElement(link.icon, { 
-                                style: { 
-                                  color: link.color, 
-                                  fontSize: '24px',
-                                  marginBottom: '8px'
-                                }
-                              })}
-                              <div>
-                                <Text style={{ fontSize: '12px', fontWeight: 500 }}>
-                                  {link.title}
-                                </Text>
-                              </div>
-                            </div>
-                          </Card>
-                        </Col>
-                      ))}
-                    </Row>
-                  </Card>
+            <Row gutter={[16, 16]}>
+              {/* Doctors List */}
+              <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+                <Card 
+                  title="Doctors List"
+                  style={{ borderRadius: '8px' }}
+                >
+                  <div style={{ overflowX: 'auto' }}>
+                    <Table 
+                      columns={doctorColumns}
+                      dataSource={doctorsList}
+                      pagination={{ 
+                        pageSize: 4, 
+                        size: 'small',
+                        showSizeChanger: false,
+                        showQuickJumper: false,
+                        simple: true
+                      }}
+                      size="small"
+                      scroll={{ x: 400 }}
+                    />
+                  </div>
+                </Card>
+              </Col>
 
-                  {/* Recent Notifications */}
-                  <Card 
-                    title="Recent Notifications"
-                    style={{ borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-                  >
-                    <Space direction="vertical" size="small" style={{ width: '100%' }}>
-                      {recentNotifications.map((notification) => (
-                        <div key={notification.id} style={{ display: 'flex', alignItems: 'flex-start' }}>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            backgroundColor: notification.color,
-                            borderRadius: '50%',
-                            marginTop: '6px',
-                            marginRight: '12px',
-                            flexShrink: 0
-                          }} />
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <Text style={{ fontSize: '13px', lineHeight: '1.4' }}>
-                                {notification.title}
-                              </Text>
-                              <Button type="link" size="small" style={{ padding: 0, height: 'auto', fontSize: '12px' }}>
-                                View
-                              </Button>
-                            </div>
-                            <Text type="secondary" style={{ fontSize: '11px' }}>
-                              {notification.time}
-                            </Text>
-                          </div>
-                        </div>
-                      ))}
+              {/* Patients List */}
+              <Col xs={24} sm={24} md={24} lg={12} xl={12}>
+                <Card 
+                  title="Patients List"
+                  style={{ borderRadius: '8px' }}
+                >
+                  <div style={{ overflowX: 'auto' }}>
+                    <Table 
+                      columns={patientColumns}
+                      dataSource={patientsList}
+                      pagination={{ 
+                        pageSize: 4, 
+                        size: 'small',
+                        showSizeChanger: false,
+                        showQuickJumper: false,
+                        simple: true
+                      }}
+                      size="small"
+                      scroll={{ x: 400 }}
+                    />
+                  </div>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Appointment List - Full Width */}
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={24} md={24} lg={24} xl={24}>
+                <Card 
+                  title={
+                    <Space>
+                      {/* <ClockCircleOutlined /> */}
+                      <Text strong>Appointment List</Text>
                     </Space>
-                  </Card>
-                </Space>
+                  }
+                  style={{ borderRadius: '8px', marginTop: '19px' }}
+                >
+                  <div style={{ overflowX: 'auto' }}>
+                    <Table 
+                      columns={appointmentColumns}
+                      dataSource={appointmentsList}
+                      pagination={{ 
+                        pageSize: 5, 
+                        size: 'small',
+                        showSizeChanger: false,
+                        showQuickJumper: false,
+                        simple: true,
+                        showTotal: (total, range) => 
+                          `${range[0]}-${range[1]} of ${total} appointments`
+                      }}
+                      size="small"
+                      scroll={{ x: 800 }}
+                      // To style table headers, use a global CSS or CSS module instead of inline styles
+                    />
+                  </div>
+                </Card>
               </Col>
             </Row>
           </Content>
